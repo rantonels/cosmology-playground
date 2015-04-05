@@ -1,0 +1,104 @@
+<html>
+
+ <meta charset="UTF-8"> 
+
+<head>
+
+	<script type="text/javascript">
+		var d_res
+
+		var ncomps = 1;
+
+		var N = ncomps + 1;
+
+		var omegas = [1.];
+		var ws = [1.];
+
+		var k = 0.;
+
+		function f(y) {
+			var tot_omega = 0;
+
+			for(var i=1; i<1+ncomps; i++) { tot_omega += y[i]; }
+
+
+
+			ap = Math.sqrt(y[0]*y[0] * tot_omega - k   );
+
+			out = [ap];
+
+			for(var i=1; i<1+ncomps; i++)
+			{
+				out.push( - 3*(1+ws[i-1]) * ap / y[0] * y[i] );
+			};
+
+
+			return out;
+
+		};
+
+		function mult(v,scalar)
+		{
+			out = [];
+			for(i = 0; i< N; i++)
+				out.push(scalar * v[i]);
+			return out;
+		}
+
+		function sum(a,b)
+		{
+			out = [];
+			for(i = 0; i < N; i++)
+				out.push(a[i]+b[i]);
+			return out;
+		}
+
+		function integrate() {
+			var h = 0.01;
+
+
+			var d_res = document.getElementById("res");
+
+			for (sgn = -1; sgn < 2; sgn+= 2)
+			{
+				var y = [1.].concat(omegas);
+			for(it = 0; it < 400; it ++)
+			{
+				d_res.innerHTML += y.toString() + "<br>";		
+			
+				var k1 = f(y);
+				var k2 = f(sum(y,mult(k1,sgn*h/2)));
+				var k3 = f(sum(y,mult(k2,sgn*h/2)));
+				var k4 = f(sum(y,mult(k3,sgn*h)));
+
+				y = sum(y , 
+					mult( 
+						(sum(sum(k1,mult(k2,2)),sum(mult(k3,2),k4))),
+					sgn*h/6)
+				       );
+				
+				if(y[0] < 0)
+				{
+					window.alert("Big bang.");
+					break;
+				}
+
+			};
+			};
+
+		};
+
+
+		window.onload = function() {
+			integrate();
+
+		};
+	</script>
+
+</head>
+
+<body>
+
+	<p id="res"></div>
+
+</body>
