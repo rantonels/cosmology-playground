@@ -147,7 +147,10 @@ function integrate() {
 
 function draw() {
 
+	var time_conformal = true;
+
 	var nwordlines = 6;
+
 
 	var data_t = [];
 	var data_y = [];
@@ -163,21 +166,26 @@ function draw() {
 
 	for (var i = 0; i<ys.length; i+=1)
 	{	
- 	 data_t.push(ys[i][0] * rH0 );
+	 if (time_conformal)
+	 	T = Rs[i][1];
+	 	data_t.push(T);
+	 else
+	 	T = ys[i][0] * rH0
+	 	data_t.push(T);
 	 data_y.push(ys[i][1][0]);
 
-	 data_points.push([ys[i][0] * rH0,ys[i][1][0]]);
+	 data_points.push([ T ,ys[i][1][0]]);
 	 
 	 for (j=0; j<ncomps; j++)
-		 data_content[j].push([ys[i][0] * rH0,ys[i][1][j+1]]);
+		 data_content[j].push([ T ,ys[i][1][j+1]]);
 	
-	 data_proper.push(	 [Rs[i][0], Rs[i][1] * ys[i][1][0]]);       
-	 data_proper_mirror.push([Rs[i][0],-Rs[i][1] * ys[i][1][0]]);
+	 data_proper.push(	 [T, Rs[i][1] * ys[i][1][0]]);       
+	 data_proper_mirror.push([T,-Rs[i][1] * ys[i][1][0]]);
 
 	 for (l=0; l<nwordlines; l++)
 	 {
 		 var k = 8*l-20;
-		 data_wordlines[l].push([ys[i][0], ys[i][1][0] * k]);
+		 data_wordlines[l].push([ T, ys[i][1][0] * k]);
 	 }
 
 	};
