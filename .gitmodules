@@ -1,3 +1,6 @@
 [submodule "flot"]
 	path = flot
 	url = https://github.com/flot/flot.git
+[submodule "flot-axislabels"]
+	path = flot-axislabels
+	url = https://github.com/markrcote/flot-axislabels.git
