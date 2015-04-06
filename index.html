@@ -8,6 +8,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
 
 	<script src="flot/jquery.flot.js"></script>
+	<script src="flot-axislabels/jquery.flot.axislabels.js"></script>
 	<script type="text/javascript">
 var d_res
 
@@ -25,8 +26,8 @@ var omega_k = - 0;
 for (i=0; i<ncomps; i++)
 	omegas[i] *= 1 - omega_k;
 
-var ys=[0.];
-
+var ys = [ ];
+var rs = [ ];
 
 function f(y) {
 	var tot_omega = 0;
@@ -80,13 +81,25 @@ function integrate() {
 	var d_res = document.getElementById("res");
 	d_res.innerHTML = "";
 
+
+	Rs = [ ];
+
 	for (sgn = -1; sgn < 2; sgn+= 2)
 	{
+
+		R = 0;
+
 		var y = [1.].concat(omegas);
 
 		var t = 0;
 
-		for(it = 0; it < 100; it ++)
+		var iterations;
+		if (sgn < 0)
+			iterations = 1000;
+		else
+			iterations = 100;
+
+		for(it = 0; it < iterations; it ++)
 		{
 			if (y[0] <= 0.02)
 			{
@@ -95,9 +108,15 @@ function integrate() {
 
 			//d_res.innerHTML += y.toString() + "<br>";		
 			if (sgn > 0)
+			{
 				ys.push([t,y]);
+				Rs.push([t,R]);
+			}
 			else
+			{
 				ys.unshift([t,y]);
+				Rs.unshift([t,R]);
+			}
 
 			var k1 = f(y);
 			var k2 = f(sum(y,mult(k1,sgn*h/2)));
@@ -116,6 +135,8 @@ function integrate() {
 			t += sgn*h;
 
 
+			R -= rH0 *  1/y[0] * sgn * h;
+
 		};
 	};
 
@@ -126,13 +147,19 @@ function integrate() {
 
 function draw() {
 
+	var nwordlines = 6;
 
 	var data_t = [];
 	var data_y = [];
 	var data_points = [];
 	var data_content = [];
+	var data_proper = [ ];
+	var data_proper_mirror = [ ];
+	var data_wordlines = []
 	for (j=0; j<ncomps; j++)
 		data_content.push([]);
+	for (k=0; k<nwordlines; k++)
+		data_wordlines.push([]);
 
 	for (var i = 0; i<ys.length; i+=1)
 	{	
@@ -143,7 +170,19 @@ function draw() {
 	 
 	 for (j=0; j<ncomps; j++)
 		 data_content[j].push([ys[i][0] * rH0,ys[i][1][j+1]]);
-	 };
+	
+	 data_proper.push(	 [Rs[i][0], Rs[i][1] * ys[i][1][0]]);       
+	 data_proper_mirror.push([Rs[i][0],-Rs[i][1] * ys[i][1][0]]);
+
+	 for (l=0; l<nwordlines; l++)
+	 {
+		 var k = 8*l-20;
+		 data_wordlines[l].push([ys[i][0], ys[i][1][0] * k]);
+	 }
+
+	};
+
+
 
 	
 	plots = [];
@@ -154,14 +193,27 @@ function draw() {
 	 	plots.push( {label:names[j], data:data_content[j]});
 
 	var marking = [
-			{ color: "#000", lineWidth: 1, xaxis: { from: 0, to: 0 } }
+			{ color: "#333", lineWidth: 2, xaxis: { from: 0, to: 0 } }
 		];
 
 
-	$.plot("#placeholder",[{label:"a(t)", data:data_points}].concat(plots),
+	$.plot("#placeholder",[{label:"a(t)", 
+				data:data_points,
+				lines:{show:true,fill:true}
+	}].concat(plots),
 	
  	{
+	  axisLabels: {
+		show: true
+	  },
+
+	  xaxes: [{
+		position:'bottom',
+		axisLabel:"Cosmological time (Gy)",
+	  }],
+
 	  yaxis: {
+		position:'right',
 		min:0,
 		max:4
 	  },
@@ -172,6 +224,42 @@ function draw() {
 
 
 	);
+
+
+
+	wordlines = [];
+	for(k=0; k<nwordlines; k++)
+		wordlines.push( {color:"#dddddd", data:data_wordlines[k] } );
+
+
+	$.plot("#stmap", wordlines.concat([ 
+	 {color:"#ddbb22", label:"Light cone",
+			    data: data_proper} ,
+	 
+	 {color:"#ddbb22", data: data_proper_mirror}
+	 
+	 ]) ,
+			    {
+
+	 axisLabels: {show:false},
+
+	 xaxis : {
+		positions:'bottom'
+	 	
+	 },
+
+	 yaxis : {
+		position:'right',
+	 	min:-20,
+	 	max:20,
+	 	axisLabel:"Proper Distance"
+	 }
+
+
+
+			    }
+			    );
+
 
 
 }
@@ -212,6 +300,11 @@ window.onload = function() {
 		<div class="demo-container">
 			<div id="placeholder" class="demo-placeholder" style="width:400px; height:400px;"></div>
 		</div>
+
+		<div class="demo-container">
+			<div id="stmap" class="demo-placeholder" style="width:400px; height:400px;"></div>
+		</div>
+
 
 		<p id="res"></div>
 
